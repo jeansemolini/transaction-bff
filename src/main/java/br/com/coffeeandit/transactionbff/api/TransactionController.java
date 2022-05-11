@@ -1,26 +1,33 @@
 package br.com.coffeeandit.transactionbff.api;
 
+import br.com.coffeeandit.transactionbff.domain.TransactionService;
 import br.com.coffeeandit.transactionbff.dto.RequestTransactionDto;
-import br.com.coffeeandit.transactionbff.dto.SituacaoEnum;
-import br.com.coffeeandit.transactionbff.dto.TipoTransacao;
 import br.com.coffeeandit.transactionbff.dto.TransactionDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
+
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/transaction")
 @Tag(name = "/transaction", description = "Grupo de API's para manipulação de transações financeiras")
 public class TransactionController {
+
+    private TransactionService transactionService;
+
+    public TransactionController(TransactionService transactionService) {
+        this.transactionService = transactionService;
+    }
 
     @Operation(description = "API para criar uma transação financeira")
     @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "Retorno OK com a transação criada."),
@@ -29,7 +36,11 @@ public class TransactionController {
             @ApiResponse(responseCode = "404", description = "Recurso não encontrado")})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public Mono<TransactionDto> enviarTransacao(@RequestBody final RequestTransactionDto requestTransactionDto) {
-        return Mono.empty();
+        Optional<TransactionDto> transactionDto = transactionService.save(requestTransactionDto);
+        if (transactionDto.isPresent()) {
+            return Mono.just(transactionDto.get());
+        }
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Unable to find resource");
     }
 
     @Operation(description = "API para buscar as transações por id")
@@ -40,7 +51,11 @@ public class TransactionController {
     @Parameters(value = {@Parameter(name = "id", in = ParameterIn.PATH)})
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public Mono<TransactionDto> buscarTransacao(@PathVariable("id") final String uuid) {
-        return Mono.empty();
+        Optional<TransactionDto> transactionDto = transactionService.findbyId(uuid);
+        if (transactionDto.isPresent()) {
+            return Mono.just(transactionDto.get());
+        }
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Unable to find resource");
     }
 
     @Operation(description = "API para remover as transações persistidas")

@@ -1,4 +1,8 @@
 package br.com.coffeeandit.transactionbff.dto;
 
-public class RequestTransactionDto {
+import java.time.LocalDateTime;
+
+public class RequestTransactionDto extends TransactionDto {
+    private SituacaoEnum situacao;
+    private LocalDateTime data;
 }

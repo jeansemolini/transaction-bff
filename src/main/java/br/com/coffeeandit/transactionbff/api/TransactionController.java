@@ -3,6 +3,7 @@ package br.com.coffeeandit.transactionbff.api;
 import br.com.coffeeandit.transactionbff.domain.TransactionService;
 import br.com.coffeeandit.transactionbff.dto.RequestTransactionDto;
 import br.com.coffeeandit.transactionbff.dto.TransactionDto;
+import br.com.coffeeandit.transactionbff.exception.NotFoundException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -40,7 +41,7 @@ public class TransactionController {
         if (transactionDto.isPresent()) {
             return Mono.just(transactionDto.get());
         }
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Unable to find resource");
+        throw new NotFoundException("Unable to find resource");
     }
 
     @Operation(description = "API para buscar as transações por id")
@@ -55,7 +56,7 @@ public class TransactionController {
         if (transactionDto.isPresent()) {
             return Mono.just(transactionDto.get());
         }
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Unable to find resource");
+        throw new NotFoundException("Unable to find resource");
     }
 
     @Operation(description = "API para remover as transações persistidas")

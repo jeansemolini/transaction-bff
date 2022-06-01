@@ -2,6 +2,7 @@ package br.com.coffeeandit.transactionbff.domain;
 
 import br.com.coffeeandit.transactionbff.dto.RequestTransactionDto;
 import br.com.coffeeandit.transactionbff.dto.TransactionDto;
+import br.com.coffeeandit.transactionbff.exception.UnauthorizedException;
 import br.com.coffeeandit.transactionbff.redis.TransactionRedisRepository;
 import org.springframework.stereotype.Service;
 

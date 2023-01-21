@@ -5,8 +5,8 @@ import br.com.coffeeandit.transactionbff.feign.LimiteClient;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.decorators.Decorators;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -23,23 +23,21 @@ public class LimiteService {
         this.countCircuitBreaker = countCircuitBreaker;
     }
 
-    public LimiteDiario buscarLimiteDiario(final Long agencia, final Long conta) {
-//    circut breaker sem fallback
-//        var limiteDiarioSup = countCircuitBreaker.decorateSupplier(() -> limiteClient.buscarLimiteDiario(agencia, conta));
-        var limiteDiarioSup = fallback(agencia, conta);
-
-        return limiteDiarioSup.get();
+    public Mono<LimiteDiario> buscarLimiteDiario(final Long agencia, final Long conta) {
+        return buscarLimiteDiarioSupplier(agencia, conta);
     }
 
-    private Supplier<LimiteDiario> fallback(final Long agencia, final Long conta) {
-        var limiteDiarioSup = countCircuitBreaker.decorateSupplier(() -> limiteClient.buscarLimiteDiario(agencia, conta));
+    private Mono<LimiteDiario> buscarLimiteDiarioSupplier(final Long agencia, final Long conta) {
+        var limiteDiarioSup = countCircuitBreaker.decorateSupplier(() ->
+                limiteClient.buscarLimiteDiario(agencia, conta));
 
-        return Decorators
+        return Mono.fromSupplier(Decorators
                 .ofSupplier(limiteDiarioSup)
                 .withCircuitBreaker(countCircuitBreaker)
                 .withFallback(Arrays.asList(CallNotPermittedException.class),
                         e -> this.getStaticLimit())
-                .decorate();
+                .decorate()
+        );
     }
 
     private LimiteDiario getStaticLimit() {

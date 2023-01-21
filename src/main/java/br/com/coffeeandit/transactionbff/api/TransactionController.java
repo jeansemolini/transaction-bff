@@ -36,12 +36,8 @@ public class TransactionController {
             @ApiResponse(responseCode = "403", description = "Erro de autorização dessa API"),
             @ApiResponse(responseCode = "404", description = "Recurso não encontrado")})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<TransactionDto> enviarTransacao(@RequestBody final RequestTransactionDto requestTransactionDto) {
-        Optional<TransactionDto> transactionDto = transactionService.save(requestTransactionDto);
-        if (transactionDto.isPresent()) {
-            return Mono.just(transactionDto.get());
-        }
-        throw new NotFoundException("Unable to find resource");
+    public Mono<RequestTransactionDto> enviarTransacao(@RequestBody final RequestTransactionDto requestTransactionDto) {
+        return transactionService.save(requestTransactionDto);
     }
 
     @Operation(description = "API para buscar as transações por id")

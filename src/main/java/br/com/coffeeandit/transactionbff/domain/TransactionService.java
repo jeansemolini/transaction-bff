@@ -1,7 +1,9 @@
 package br.com.coffeeandit.transactionbff.domain;
 
 import br.com.coffeeandit.transactionbff.dto.RequestTransactionDto;
+import br.com.coffeeandit.transactionbff.dto.SituacaoEnum;
 import br.com.coffeeandit.transactionbff.dto.TransactionDto;
+import br.com.coffeeandit.transactionbff.exception.NotFoundException;
 import br.com.coffeeandit.transactionbff.redis.TransactionRedisRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,6 +14,8 @@ import org.springframework.retry.annotation.Retryable;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Mono;
+import reactor.core.publisher.SignalType;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -36,20 +40,30 @@ public class TransactionService {
 
     @Transactional
     @Retryable(value = QueryTimeoutException.class, maxAttempts = 5, backoff = @Backoff(delay = 100))
-    public Optional<TransactionDto> save(final RequestTransactionDto requestTransactionDto) {
-        requestTransactionDto.setData(LocalDateTime.now());
-        reactiveKafkaProducerTemplate.send(topic, requestTransactionDto)
-                .doOnSuccess(voidSenderResult -> log.info(voidSenderResult.toString()))
-                .subscribe();
-        return Optional.of(transactionRedisRepository.save(requestTransactionDto));
-    }
+    public Mono<RequestTransactionDto> save(final RequestTransactionDto requestTransactionDto) {
 
-//    Retry utilizando anotação
-//    @Retryable(value = QueryTimeoutException.class, maxAttempts = 5, backoff = @Backoff(delay = 1000))
-//    public Optional<TransactionDto> findbyId(final String id) {
-//        log.info("Consultando Redis...");
-//        return transactionRedisRepository.findById(id);
-//    }
+        return Mono.fromCallable(() -> {
+            requestTransactionDto.setData(LocalDateTime.now());
+            requestTransactionDto.naoAnalisada();
+            return transactionRedisRepository.save(requestTransactionDto);
+
+        })
+        .doOnError(throwable -> {
+            log.error(throwable.getMessage(), throwable);
+            throw new NotFoundException("Unable to find resource");
+        })
+        .doOnSuccess(requestTransactionDto1 -> {
+            log.info("Transação enviada com sucesso: {}", requestTransactionDto1);
+            reactiveKafkaProducerTemplate.send(topic, requestTransactionDto)
+                    .doOnSuccess(voidSenderResult -> log.info(voidSenderResult.toString()))
+                    .subscribe();
+        })
+        .doFinally(signalType -> {
+            if (signalType.compareTo(SignalType.ON_COMPLETE) == 0) {
+                log.info("Mensagem enviada ao kafka com sucesso {}", requestTransactionDto);
+            }
+        });
+    }
 
     public Optional<TransactionDto> findbyId(final String id) {
         return retryTemplate.execute(ret -> {

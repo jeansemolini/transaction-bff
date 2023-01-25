@@ -13,10 +13,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -40,7 +44,24 @@ public class TransactionController {
         return transactionService.save(requestTransactionDto);
     }
 
-    @Operation(description = "API para buscar as transações por id")
+    @GetMapping(value = "/{agencia}/{conta}")
+    public Flux<List<TransactionDto>> buscarTransacoes(@PathVariable("agencia") Long agencia, @PathVariable("conta") Long conta) {
+        return transactionService.findByAgenciaAndContaFlux(agencia, conta);
+    }
+
+    @GetMapping(value = "/sse/{agencia}/{conta}")
+    public Flux<ServerSentEvent<List<TransactionDto>>> buscarTransacoesSSE(@PathVariable("agencia") Long agencia, @PathVariable("conta") Long conta) {
+        return Flux.interval(Duration.ofSeconds(2))
+                .map(sequence -> ServerSentEvent.<List<TransactionDto>>builder()
+                        .id(String.valueOf(sequence))
+                        .event("transacoes")
+                        .data(transactionService.findByAgenciaAndConta(agencia, conta))
+                        .retry(Duration.ofSeconds(1))
+                        .build()
+                );
+    }
+
+        @Operation(description = "API para buscar as transações por id")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Retorno OK da Lista de transações"),
             @ApiResponse(responseCode = "401", description = "Erro de autenticação dessa API"),
             @ApiResponse(responseCode = "403", description = "Erro de autorização dessa API"),

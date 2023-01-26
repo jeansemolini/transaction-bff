@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
@@ -29,6 +30,12 @@ import java.util.Optional;
 public class TransactionController {
 
     private TransactionService transactionService;
+
+    @Value("${transacoes.duration}")
+    private Long duration;
+
+    @Value("${transacoes.events}")
+    private String events;
 
     public TransactionController(TransactionService transactionService) {
         this.transactionService = transactionService;
@@ -51,10 +58,10 @@ public class TransactionController {
 
     @GetMapping(value = "/sse/{agencia}/{conta}")
     public Flux<ServerSentEvent<List<TransactionDto>>> buscarTransacoesSSE(@PathVariable("agencia") Long agencia, @PathVariable("conta") Long conta) {
-        return Flux.interval(Duration.ofSeconds(2))
+        return Flux.interval(Duration.ofSeconds(duration))
                 .map(sequence -> ServerSentEvent.<List<TransactionDto>>builder()
                         .id(String.valueOf(sequence))
-                        .event("transacoes")
+                        .event(events)
                         .data(transactionService.findByAgenciaAndConta(agencia, conta))
                         .retry(Duration.ofSeconds(1))
                         .build()

@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-@ToString(of = {"uuid", "situacao"})
+@ToString(of = {"uuid", "situacao", "valor"})
 public class RequestTransactionDto extends TransactionDto {
     private SituacaoEnum situacao;
     private LocalDateTime data;

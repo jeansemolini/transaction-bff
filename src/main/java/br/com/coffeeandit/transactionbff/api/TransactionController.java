@@ -11,11 +11,11 @@ import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.http.HttpStatus;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cloud.sleuth.annotation.SpanTag;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -26,6 +26,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/transaction")
 @Tag(name = "/transaction", description = "Grupo de API's para manipulação de transações financeiras")
+@Slf4j
 public class TransactionController {
 
     private TransactionService transactionService;
@@ -40,7 +41,8 @@ public class TransactionController {
             @ApiResponse(responseCode = "403", description = "Erro de autorização dessa API"),
             @ApiResponse(responseCode = "404", description = "Recurso não encontrado")})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<RequestTransactionDto> enviarTransacao(@RequestBody final RequestTransactionDto requestTransactionDto) {
+    public Mono<RequestTransactionDto> enviarTransacao(@SpanTag(value = "enviarTransacao") @RequestBody final RequestTransactionDto requestTransactionDto) {
+        log.info("Recebendo a requisição {}", requestTransactionDto);
         return transactionService.save(requestTransactionDto);
     }
 

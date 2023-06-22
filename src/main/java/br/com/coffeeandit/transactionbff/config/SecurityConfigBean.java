@@ -17,7 +17,7 @@ public class SecurityConfigBean {
     @Bean
     public SecurityWebFilterChain securityFilterChain(final ServerHttpSecurity http) {
         http.exceptionHandling()
-                .and().redirectToHttps()
+//                .and().redirectToHttps()
                 .and().csrf().disable().formLogin().disable()
                 .httpBasic().disable().authorizeExchange()
                 .pathMatchers("/actuator/**").permitAll()

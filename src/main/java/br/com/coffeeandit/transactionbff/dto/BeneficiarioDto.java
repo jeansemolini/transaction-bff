@@ -12,7 +12,7 @@ public class BeneficiarioDto {
 
     @NotNull(message = "Informar o CPF.")
     @Schema(description = "CPF fo Beneficiário")
-    private Long CPF;
+    private Long cpf;
     @NotNull(message = "Informar o código do banco de destino.")
     @Schema(description = "Conta de origem da transação")
     private Long codigoBanco;

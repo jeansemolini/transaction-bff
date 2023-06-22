@@ -5,6 +5,10 @@ import br.com.coffeeandit.transactionbff.dto.TransactionDto;
 import br.com.coffeeandit.transactionbff.exception.NotFoundException;
 import br.com.coffeeandit.transactionbff.feign.TransactionClient;
 import br.com.coffeeandit.transactionbff.redis.TransactionRedisRepository;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.Tags;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.QueryTimeoutException;
@@ -20,6 +24,7 @@ import reactor.core.publisher.SignalType;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -87,5 +92,12 @@ public class TransactionService {
 
     public List<TransactionDto> findByAgenciaAndConta(final Long agencia, Long conta) {
         return transactionClient.buscarTransacoes(agencia, conta);
+    }
+
+    public List<TransactionDto> findAll() {
+        return retryTemplate.execute(ret -> {
+            log.info("Consultando Redis...");
+            return transactionRedisRepository.findAll();
+        });
     }
 }

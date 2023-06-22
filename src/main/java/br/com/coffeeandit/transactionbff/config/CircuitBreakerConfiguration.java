@@ -23,9 +23,7 @@ public class CircuitBreakerConfiguration {
                 .build();
 
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(circuitBreakerConfig);
-        CircuitBreaker cb = circuitBreakerRegistry.circuitBreaker("limitesSearchBasedOnCount");
-
-        return cb;
+        return circuitBreakerRegistry.circuitBreaker("limitesSearchBasedOnCount");
     }
 
     @Bean
@@ -40,9 +38,7 @@ public class CircuitBreakerConfiguration {
                 .build();
 
         CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.of(circuitBreakerConfig);
-        CircuitBreaker cb = circuitBreakerRegistry.circuitBreaker("limitesSearchBasedOnTime");
-
-        return cb;
+        return circuitBreakerRegistry.circuitBreaker("limitesSearchBasedOnTime");
     }
 
 }

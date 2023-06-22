@@ -2,6 +2,8 @@ plugins {
     id 'org.springframework.boot' version '2.6.7'
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id 'java'
+    id 'jacoco'
+    id 'org.sonarqube' version '3.4.0.2513'
 }
 
 group = 'br.com.coffeeandit'
@@ -67,8 +69,41 @@ dependencies {
     //micrometer e actuator
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-registry-prometheus'
+
+    //testes
+    testImplementation 'io.projectreactor:reactor-test'
+    testImplementation 'it.ozimov:embedded-redis:0.7.3'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.kafka:spring-kafka-test'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+    configurations.testRuntimeOnly {
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+    }
 }
 
 tasks.named('test') {
+
+    jacoco {
+        destinationFile = file("$buildDir/jacoco/jacocoTest.exec")
+        classDumpDir = file("$buildDir/jacoco/classpathdumps")
+    }
+
     useJUnitPlatform()
+}
+
+tasks.named('sonarqube').configure {
+    dependsOn jacocoTestReport
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+        html.enabled true
+        csv.enabled false
+    }
+
+    dependsOn test
+    getExecutionData().setFrom(fileTree(buildDir).include("/jacoco/jacocoTest.exec"))
 }

@@ -22,10 +22,4 @@ public class TransactionBffApplication {
     public static void main(String[] args) {
         SpringApplication.run(TransactionBffApplication.class, args);
     }
-
-    @Bean
-    MeterRegistryCustomizer<MeterRegistry> metricsCommonsTags() {
-        return registry -> registry.config().commonTags("application", "transaction-bff");
-    }
-
 }

@@ -1,0 +1,40 @@
+stages:
+  - build
+  - test
+
+variables:
+  SONAR_TOKEN: "a6060fcac0a13bfc0aaf9bb284f96329f58d3bbe"
+  SONAR_URL: "https://sonar.coffeeandit.com.br/"
+
+package:
+  stage: build
+  image: gradle:7.5.1-jdk17
+  before_script:
+    - export GRADLE_USER_HOME=`pwd`/.gradle
+  script:
+    - gradle assemble
+  cache:
+    paths:
+      - .gradle/wrapper
+      - .gradle/caches
+  artifacts:
+    paths:
+      - build/*
+    expire_in: 1 hour
+
+tests:
+  stage: test
+  image: gradle:7.5.1-jdk17
+  before_script:
+    - export GRADLE_USER_HOME=`pwd`/.gradle
+  script:
+    - gradle check jacocoTestReport
+    - gradle sonarqube -Dsonar.qualitygate.wait=true -Dsonar.gitlab.commit_sha=$CI_COMMIT_SHA -Dsonar.gitlab.ref_name=$CI_COMMIT_REF_NAME -Dsonar.gitlab.project_id=$CI_PROJECT_ID
+  cache:
+    paths:
+      - .gradle/wrapper
+      - .gradle/caches
+  artifacts:
+    paths:
+      - build/*
+    expire_in: 1 hour

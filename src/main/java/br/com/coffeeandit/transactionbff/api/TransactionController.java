@@ -4,9 +4,6 @@ import br.com.coffeeandit.transactionbff.domain.TransactionService;
 import br.com.coffeeandit.transactionbff.dto.RequestTransactionDto;
 import br.com.coffeeandit.transactionbff.dto.TransactionDto;
 import br.com.coffeeandit.transactionbff.exception.NotFoundException;
-import io.micrometer.core.instrument.Gauge;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tags;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -23,8 +20,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,17 +33,6 @@ public class TransactionController {
 
     public TransactionController(TransactionService transactionService) {
         this.transactionService = transactionService;
-    }
-
-    public TransactionController(MeterRegistry registry) {
-        Gauge.builder("filmes_comprados", this, value ->
-                        transactionService.findAll().size())
-                .description("")
-                .tags(Tags.of(io.micrometer.core.instrument.Tag.of("data",
-                        LocalDateTime.now().format(
-                                DateTimeFormatter.ofPattern("dd/MM/yyyy")))))
-                .baseUnit("jeansemolini")
-                .register(registry);
     }
 
     @Operation(description = "API para criar uma transação financeira")
